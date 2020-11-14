@@ -35,3 +35,44 @@ plays['redzone'] = plays.absoluteYardlineNumber <= 20
 
 # Incomplete pass
 plays['incompletePass'] = (plays.playDescription.str.contains("incomplete")) & (plays.playResult == 0)
+
+# First down
+plays['firstDown'] = plays.playResult >= plays.yardsToGo
+
+# Touchdown?
+
+# Add new column for number of players per each position for offense, defense?
+
+
+##########
+# Analysis
+##########
+combos = ['offenseFormation'
+          ,'personnelO'
+          ,'personnelD'
+          ,'defendersInTheBox'
+          , ['offenseFormation'
+             , 'personnelD'
+             ]
+          , ['offenseFormation'
+             , 'defendersInTheBox'
+             ]
+          , ['offenseFormation'
+             ,'personnelD'
+             , 'defendersInTheBox'
+             ]
+          , ['offenseFormation'
+             ,'personnelO'
+             ,'personnelD'
+             ,'defendersInTheBox'
+             ]
+          ]
+resultVars = ['playResult'
+              ,'firstDown']
+analysis = {}
+minCount = 10
+for combo in combos:
+    for resultVar in resultVars:
+        agg = plays.groupby(combo)[resultVar].agg(['mean', 'count'])
+        analysis[resultVar + "".join(combo)] = agg[agg['count'] >= minCount]
+
