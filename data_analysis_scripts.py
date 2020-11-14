@@ -40,9 +40,19 @@ plays['incompletePass'] = (plays.playDescription.str.contains("incomplete")) & (
 plays['firstDown'] = plays.playResult >= plays.yardsToGo
 
 # Touchdown?
+plays['touchDown'] = (plays.playResult >= plays.absoluteYardlineNumber)
 
 # Add new column for number of players per each position for offense, defense?
+plays['numRB'] = plays.personnelO.str.split(",").str[0].str[0]
+plays['numTE'] = plays.personnelO.str.split(",").str[1].str[1]
+plays['numWR'] = plays.personnelO.str.split(",").str[2].str[1]
 
+plays['numDL'] = plays.personnelD.str.split(",").str[0].str[0]
+plays['numLB'] = plays.personnelD.str.split(",").str[1].str[1]
+plays['numDB'] = plays.personnelD.str.split(",").str[2].str[1]
+
+# Exporting updated df
+plays.to_csv('updated_plays.csv')
 
 ##########
 # Analysis
@@ -75,4 +85,6 @@ for combo in combos:
     for resultVar in resultVars:
         agg = plays.groupby(combo)[resultVar].agg(['mean', 'count'])
         analysis[resultVar + "".join(combo)] = agg[agg['count'] >= minCount]
+
+
 
