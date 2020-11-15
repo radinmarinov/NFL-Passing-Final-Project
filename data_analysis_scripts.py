@@ -43,13 +43,47 @@ plays['firstDown'] = plays.playResult >= plays.yardsToGo
 plays['touchDown'] = (plays.playResult >= plays.absoluteYardlineNumber)
 
 # Add new column for number of players per each position for offense, defense?
-plays['numRB'] = plays.personnelO.str.split(",").str[0].str[0]
-plays['numTE'] = plays.personnelO.str.split(",").str[1].str[1]
-plays['numWR'] = plays.personnelO.str.split(",").str[2].str[1]
+# Offense
+accum = []
 
-plays['numDL'] = plays.personnelD.str.split(",").str[0].str[0]
-plays['numLB'] = plays.personnelD.str.split(",").str[1].str[1]
-plays['numDB'] = plays.personnelD.str.split(",").str[2].str[1]
+for row in plays['personnelO']:
+    rowLst = row.split(',')
+    vals = {}
+
+    for el in rowLst:
+        elLst = el.split(' ')
+
+        if len(elLst) == 2:
+            vals["num" + elLst[1]] = int(elLst[0])
+        else:
+            vals["num" + elLst[2]] = int(elLst[1])
+
+    accum.append(vals)
+
+tempDF = pd.DataFrame(accum)
+tempDF = tempDF.fillna(0).astype(int)
+plays = pd.concat([plays.reset_index(drop=True), tempDF.reset_index(drop=True)], axis=1)
+
+# Defense
+accum2 = []
+
+for row in plays['personnelD']:
+    rowLst = row.split(',')
+    vals = {}
+
+    for el in rowLst:
+        elLst = el.split(' ')
+
+        if len(elLst) == 2:
+            vals["num" + elLst[1]] = int(elLst[0])
+        else:
+            vals["num" + elLst[2]] = int(elLst[1])
+
+    accum2.append(vals)
+
+tempDF2 = pd.DataFrame(accum2)
+tempDF2 = tempDF2.fillna(0).astype(int)
+plays = pd.concat([plays.reset_index(drop=True), tempDF2.reset_index(drop=True)], axis=1)
 
 # Exporting updated df
 plays.to_csv('updated_plays.csv')
