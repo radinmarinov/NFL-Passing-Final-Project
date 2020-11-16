@@ -6,6 +6,7 @@ Created on Thu Nov 12 14:22:44 2020
 """
 
 import pandas as pd
+import matplotlib.pyplot as plt
 
 # Import data
 plays = pd.read_csv("plays.csv")
@@ -119,6 +120,40 @@ for combo in combos:
     for resultVar in resultVars:
         agg = plays.groupby(combo)[resultVar].agg(['mean', 'count'])
         analysis[resultVar + "".join(combo)] = agg[agg['count'] >= minCount]
+
+##########
+# Graphing
+##########
+
+playResultoffenseFormation = analysis['playResultoffenseFormation']
+plt.figure(1)
+playResultoffenseFormation['mean'].plot(kind='bar')
+plt.xlabel('Offense Formation')
+plt.ylabel('Mean of Play Result')
+plt.title('Offense Formation v. Mean of Play Result')
+plt.savefig('graphs/OF_PR_M')
+
+plt.figure(2)
+playResultoffenseFormation['count'].plot(kind='bar')
+plt.xlabel('Offense Formation')
+plt.ylabel('Count of Play Result')
+plt.title('Offense Formation v. Count of Play Result')
+plt.savefig('graphs/OF_PR_C')
+
+firstDownoffenseFormation = analysis['firstDownoffenseFormation']
+plt.figure(3)
+firstDownoffenseFormation['mean'].plot(kind='bar')
+plt.xlabel('Offense Formation')
+plt.ylabel('Mean of First Down')
+plt.title('Offense Formation v. Mean of First Down')
+plt.savefig('graphs/OF_FD_M')
+
+plt.figure(4)
+firstDownoffenseFormation['count'].plot(kind='bar')
+plt.xlabel('Offense Formation')
+plt.ylabel('Count of First Down')
+plt.title('Offense Formation v. Count of First Down')
+plt.savefig('graphs/OF_FD_C')
 
 
 
