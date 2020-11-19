@@ -7,7 +7,7 @@ cleaned_plays.drop(['gameId', 'playId', 'playDescription', 'personnelO', 'person
                     'yardlineSide', 'touchDown'], axis=1, inplace=True)
 
 feature_matrix = cleaned_plays.drop(['playType', 'passResult', 'offensePlayResult',
-                                     'playResult', 'epa', 'incompletePass', 'incompletePass', 'firstDown'],
+                                     'playResult', 'epa', 'incompletePass', 'firstDown'],
                                     axis=1, inplace=False)
 
 
