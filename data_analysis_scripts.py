@@ -7,6 +7,7 @@ Created on Thu Nov 12 14:22:44 2020
 
 import pandas as pd
 import matplotlib.pyplot as plt
+import numpy as np
 
 # Import data
 plays = pd.read_csv("plays.csv")
@@ -55,9 +56,9 @@ for row in plays['personnelO']:
         elLst = el.split(' ')
 
         if len(elLst) == 2:
-            vals["num" + elLst[1]] = int(elLst[0])
+            vals["num" + elLst[1] + "offense"] = int(elLst[0])
         else:
-            vals["num" + elLst[2]] = int(elLst[1])
+            vals["num" + elLst[2] + "offense"] = int(elLst[1])
 
     accum.append(vals)
 
@@ -76,15 +77,27 @@ for row in plays['personnelD']:
         elLst = el.split(' ')
 
         if len(elLst) == 2:
-            vals["num" + elLst[1]] = int(elLst[0])
+            vals["num" + elLst[1] + "defense"] = int(elLst[0])
         else:
-            vals["num" + elLst[2]] = int(elLst[1])
+            vals["num" + elLst[2] + "defense"] = int(elLst[1])
 
     accum2.append(vals)
 
 tempDF2 = pd.DataFrame(accum2)
 tempDF2 = tempDF2.fillna(0).astype(int)
 plays = pd.concat([plays.reset_index(drop=True), tempDF2.reset_index(drop=True)], axis=1)
+
+# cleaning clock data
+time_accum = []
+
+temp = plays['gameClock'].replace(np.nan, "00:00:00", regex=True)
+
+for t in temp:
+    m, s, ms = str(t).split(":")
+    secs = int(m) * 60 + int(s)
+    time_accum.append(secs)
+
+plays['gameClockSecs'] = time_accum
 
 # Exporting updated df
 plays.to_csv('updated_plays.csv')
