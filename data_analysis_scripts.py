@@ -11,6 +11,7 @@ import numpy as np
 
 # Import data
 plays = pd.read_csv("plays.csv")
+games = pd.read_csv("games.csv")
 
 ###############
 # Data cleaning
@@ -104,6 +105,24 @@ plays['gameClockSecsOverall'] = time_accum_overall
 
 # Last two minutes of either half
 plays['lastTwoMinutes'] = (plays['gameClockSecsQuarter'] <= 120) & (plays['quarter'] % 2 == 0)
+
+# Offense score and defense score
+gameId_lst = plays['gameId'].tolist()
+offenseScore = []
+defenseScore = []
+
+for i, g in enumerate(gameId_lst):
+    homeTeam = games.loc[games['gameId'] == g, 'homeTeamAbbr'].iloc[0]
+
+    if plays['possessionTeam'].iloc[i] == homeTeam:
+        offenseScore.append(plays['preSnapHomeScore'].iloc[i])
+        defenseScore.append(plays['preSnapVisitorScore'].iloc[i])
+    else:
+        offenseScore.append(plays['preSnapVisitorScore'].iloc[i])
+        defenseScore.append(plays['preSnapHomeScore'].iloc[i])
+
+plays['offenseScore'] = offenseScore
+plays['defenseScore'] = defenseScore
 
 # Exporting updated df
 plays.to_csv('updated_plays.csv')
