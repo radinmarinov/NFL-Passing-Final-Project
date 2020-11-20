@@ -88,16 +88,22 @@ tempDF2 = tempDF2.fillna(0).astype(int)
 plays = pd.concat([plays.reset_index(drop=True), tempDF2.reset_index(drop=True)], axis=1)
 
 # cleaning clock data
-time_accum = []
+time_accum_quarter = []
+time_accum_overall = []
 
 temp = plays['gameClock'].replace(np.nan, "00:00:00", regex=True)
 
-for t in temp:
+for idx, t in enumerate(temp):
     m, s, ms = str(t).split(":")
     secs = int(m) * 60 + int(s)
-    time_accum.append(secs)
+    time_accum_quarter.append(secs)
+    time_accum_overall.append(secs + (15*60* max(4-plays['quarter'].iloc[idx], 0)))
 
-plays['gameClockSecs'] = time_accum
+plays['gameClockSecsQuarter'] = time_accum_quarter
+plays['gameClockSecsOverall'] = time_accum_overall
+
+# Last two minutes of either half
+plays['lastTwoMinutes'] = (plays['gameClockSecsQuarter'] <= 120) & (plays['quarter'] % 2 == 0)
 
 # Exporting updated df
 plays.to_csv('updated_plays.csv')
