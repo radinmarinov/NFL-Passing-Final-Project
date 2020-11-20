@@ -23,7 +23,7 @@ plays = plays[(pd.isna(plays.penaltyCodes)) & \
 #check_nulls = [{col, sum(pd.isna(plays[col]))} for col in plays.columns]
 
 # 5 entries missing partial data (typeDropback, scores, game clock, abs yardline)
-#plays[pd.isna(plays.typeDropback)]
+plays = plays[~pd.isna(plays.typeDropback)]
 
 #####################
 # Feature Engineering
@@ -41,10 +41,10 @@ plays['incompletePass'] = (plays.playDescription.str.contains("incomplete")) & (
 # First down
 plays['firstDown'] = plays.playResult >= plays.yardsToGo
 
-# Touchdown?
+# Touchdown
 plays['touchDown'] = (plays.playResult >= plays.absoluteYardlineNumber)
 
-# Add new column for number of players per each position for offense, defense?
+# Add new column for number of players per each position for offense, defense
 # Offense
 accum = []
 
