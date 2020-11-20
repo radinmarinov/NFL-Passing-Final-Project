@@ -49,8 +49,6 @@ feature_matrix = cleaned_plays.drop(['playType', 'passResult', 'offensePlayResul
                                      'numDLoffense', 'numQBoffense', 'numDBoffense' ,'numTEdefense', 'numWRdefense', 'numOLdefense'],
                                     axis=1, inplace=False)
 
-print(feature_matrix.columns.tolist())
-
 # Creating different target vectors
 playResult_target = cleaned_plays['playResult']
 epa_target = cleaned_plays['epa']
