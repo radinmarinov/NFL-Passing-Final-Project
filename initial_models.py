@@ -2,7 +2,7 @@ import pickle
 import pandas as pd
 import numpy as np
 from sklearn import tree
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression, Lasso
 from sklearn.metrics import mean_squared_error
@@ -22,17 +22,24 @@ def save_model(model, model_type, target_identifier):
 
 
 # Decision tree model
-def tree_model(features, targets, maximum_depth, target_identifier):
-    clf = tree.DecisionTreeClassifier(max_depth=maximum_depth)
+def tree_model(features, targets, target_identifier):
+    clf = tree.DecisionTreeRegressor()
     clf = clf.fit(features, targets)
     save_model(clf, "decision_tree_model", target_identifier)
 
 
 # Random forest model
-def random_forest_model(features, targets, maximum_depth, target_identifier):
-    clf = RandomForestClassifier(max_depth=maximum_depth)
+def random_forest_model(features, targets, target_identifier):
+    clf = RandomForestRegressor()
     clf.fit(features, targets)
     save_model(clf, "random_forest_model", target_identifier)
+
+
+# GBM model
+def gbm_model(features, targets, target_identifier):
+    clf = GradientBoostingRegressor(random_state=0)
+    clf.fit(features, targets)
+    save_model(clf, "gbm_model", target_identifier)
 
 
 updated_plays = pd.read_csv("updated_plays.csv")
@@ -48,8 +55,6 @@ feature_matrix = cleaned_plays.drop(['playType', 'passResult', 'offensePlayResul
                                      'playResult', 'epa', 'incompletePass', 'firstDown', 'yardlineNumber',
                                      'numDLoffense', 'numQBoffense', 'numDBoffense' ,'numTEdefense', 'numWRdefense', 'numOLdefense'],
                                     axis=1, inplace=False)
-
-print(feature_matrix.columns.tolist())
 
 # Creating different target vectors
 playResult_target = cleaned_plays['playResult']
@@ -82,3 +87,25 @@ for target in ['playResult', 'EPA']:
     linear_results[target + '_lasso_train'] = [round(mean_squared_error(y_train, lasso.predict(x_train), squared=False),3), pd.DataFrame(lasso.coef_, dummied_df.columns)]
     linear_results[target + '_lasso_test'] = [round(mean_squared_error(y_test, lasso.predict(x_test), squared=False),3), pd.DataFrame(lasso.coef_, dummied_df.columns)]
 '''
+
+###################
+# Tree Model work & GBM
+###################
+dummied_df = pd.get_dummies(feature_matrix)
+train_features, test_features, train_targets, test_targets = set_split(dummied_df.to_numpy(), epa_target.to_numpy(), 0.2)
+
+scaler = StandardScaler()
+train_features = scaler.fit_transform(train_features)
+test_features = scaler.transform(test_features)
+
+train_targets_cv = train_targets.reshape(train_targets.shape[0], -1)
+test_targets_cv = test_targets.reshape(test_targets.shape[0], -1)
+
+tree_model(train_features, train_targets_cv, 'epa')
+print('Done DT')
+
+random_forest_model(train_features, train_targets, 'epa')
+print('Done RF')
+
+gbm_model(train_features, train_targets, 'epa')
+print('Done GBM')
