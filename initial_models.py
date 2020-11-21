@@ -60,7 +60,7 @@ feature_matrix = cleaned_plays.drop(['playType', 'passResult', 'offensePlayResul
 playResult_target = cleaned_plays['playResult']
 epa_target = cleaned_plays['epa']
 
-'''
+
 ###################
 # Linear Model work
 ###################
@@ -72,6 +72,7 @@ scaler = StandardScaler()
 x_train = scaler.fit_transform(x_train)
 x_test = scaler.transform(x_test)
 
+'''
 linear_results = {}
 for target in ['playResult', 'EPA']:
     if target == 'playResult':
@@ -91,22 +92,10 @@ for target in ['playResult', 'EPA']:
 ###################
 # Tree Model work & GBM
 ###################
-dummied_df = pd.get_dummies(feature_matrix)
-train_features, test_features, train_targets, test_targets = set_split(dummied_df.to_numpy(), epa_target.to_numpy(), 0.2)
+y_train, y_test = epa_target[train_indices], epa_target[~train_indices]
 
-scaler = StandardScaler()
-train_features = scaler.fit_transform(train_features)
-test_features = scaler.transform(test_features)
+tree_model(x_train, y_train, 'epa')
+random_forest_model(x_train, y_train, 'epa')
+gbm_model(x_train, y_train, 'epa')
 
-train_targets_cv = train_targets.reshape(train_targets.shape[0], -1)
-test_targets_cv = test_targets.reshape(test_targets.shape[0], -1)
-
-tree_model(train_features, train_targets_cv, 'epa')
-print('Done DT')
-
-random_forest_model(train_features, train_targets, 'epa')
-print('Done RF')
-
-gbm_model(train_features, train_targets, 'epa')
-print('Done GBM')
 
