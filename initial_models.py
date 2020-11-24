@@ -7,7 +7,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression, Lasso
 from sklearn.metrics import mean_squared_error
 from sklearn.preprocessing import StandardScaler
-
+from sklearn.neural_network import MLPRegressor
 
 # Splits feature matrix and targets into training and test sets
 def set_split(features, targets, test_ratio):
@@ -60,10 +60,9 @@ feature_matrix = cleaned_plays.drop(['playType', 'passResult', 'offensePlayResul
 playResult_target = cleaned_plays['playResult']
 epa_target = cleaned_plays['epa']
 
-
-###################
-# Linear Model work
-###################
+##########
+# Modeling
+##########
 np.random.seed(0)
 train_indices = np.random.rand(len(feature_matrix)) < 0.75
 dummied_df = pd.get_dummies(feature_matrix)
@@ -71,8 +70,12 @@ x_train, x_test = dummied_df[train_indices], dummied_df[~train_indices]
 scaler = StandardScaler()
 x_train = scaler.fit_transform(x_train)
 x_test = scaler.transform(x_test)
+y_train, y_test = epa_target[train_indices], epa_target[~train_indices]
 
-'''
+###################
+# Linear Model work
+###################
+"""
 linear_results = {}
 for target in ['playResult', 'EPA']:
     if target == 'playResult':
@@ -87,15 +90,26 @@ for target in ['playResult', 'EPA']:
     linear_results[target + '_linReg_test'] = [round(mean_squared_error(y_test, reg.predict(x_test), squared=False),3), pd.DataFrame(reg.coef_, dummied_df.columns)]
     linear_results[target + '_lasso_train'] = [round(mean_squared_error(y_train, lasso.predict(x_train), squared=False),3), pd.DataFrame(lasso.coef_, dummied_df.columns)]
     linear_results[target + '_lasso_test'] = [round(mean_squared_error(y_test, lasso.predict(x_test), squared=False),3), pd.DataFrame(lasso.coef_, dummied_df.columns)]
-'''
+"""
 
 ###################
 # Tree Model work & GBM
 ###################
-y_train, y_test = epa_target[train_indices], epa_target[~train_indices]
-
+"""
 tree_model(x_train, y_train, 'epa')
 random_forest_model(x_train, y_train, 'epa')
 gbm_model(x_train, y_train, 'epa')
+"""
+
+################
+# Neural Network 
+################
+hidden_layer = (2,2,2)
+activation = 'tanh'
+MLP = MLPRegressor(hidden_layer_sizes=hidden_layer
+                    , random_state=1
+                    , activation=activation
+                    , max_iter=200).fit(x_train, y_train)
+print(round(mean_squared_error(y_train, MLP.predict(x_train), squared=False),3), round(mean_squared_error(y_test, MLP.predict(x_test), squared=False),3))
 
 
