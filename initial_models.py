@@ -9,10 +9,12 @@ from sklearn.metrics import mean_squared_error
 from sklearn.preprocessing import StandardScaler
 from sklearn.neural_network import MLPRegressor
 
+'''
 # Splits feature matrix and targets into training and test sets
 def set_split(features, targets, test_ratio):
     x_train, x_test, y_train, y_test = train_test_split(features, targets, test_size=test_ratio)
     return x_train, x_test, y_train, y_test
+'''
 
 
 def save_model(model, model_type, target_identifier):
@@ -21,25 +23,32 @@ def save_model(model, model_type, target_identifier):
         pickle.dump(model, file)
 
 
+def load_model(model_type, target_identifier):
+    pkl_filename = "models/" + model_type + "_" + target_identifier + ".pkl"
+    with open(pkl_filename, 'rb') as file:
+        model = pickle.load(file)
+        return model
+
+
 # Decision tree model
 def tree_model(features, targets, target_identifier):
     clf = tree.DecisionTreeRegressor()
     clf = clf.fit(features, targets)
-    save_model(clf, "decision_tree_model", target_identifier)
+    save_model(clf, "decision_tree", target_identifier)
 
 
 # Random forest model
 def random_forest_model(features, targets, target_identifier):
     clf = RandomForestRegressor()
     clf.fit(features, targets)
-    save_model(clf, "random_forest_model", target_identifier)
+    save_model(clf, "random_forest", target_identifier)
 
 
 # GBM model
 def gbm_model(features, targets, target_identifier):
     clf = GradientBoostingRegressor(random_state=0)
     clf.fit(features, targets)
-    save_model(clf, "gbm_model", target_identifier)
+    save_model(clf, "gbm", target_identifier)
 
 
 updated_plays = pd.read_csv("updated_plays.csv")
@@ -75,7 +84,6 @@ y_train, y_test = epa_target[train_indices], epa_target[~train_indices]
 ###################
 # Linear Model work
 ###################
-"""
 linear_results = {}
 for target in ['playResult', 'EPA']:
     if target == 'playResult':
@@ -90,20 +98,36 @@ for target in ['playResult', 'EPA']:
     linear_results[target + '_linReg_test'] = [round(mean_squared_error(y_test, reg.predict(x_test), squared=False),3), pd.DataFrame(reg.coef_, dummied_df.columns)]
     linear_results[target + '_lasso_train'] = [round(mean_squared_error(y_train, lasso.predict(x_train), squared=False),3), pd.DataFrame(lasso.coef_, dummied_df.columns)]
     linear_results[target + '_lasso_test'] = [round(mean_squared_error(y_test, lasso.predict(x_test), squared=False),3), pd.DataFrame(lasso.coef_, dummied_df.columns)]
-"""
 
 ###################
 # Tree Model work & GBM
 ###################
-"""
+'''
 tree_model(x_train, y_train, 'epa')
 random_forest_model(x_train, y_train, 'epa')
 gbm_model(x_train, y_train, 'epa')
-"""
+'''
+
+dt_clf = load_model("decision_tree", "epa")
+rf_clf = load_model("random_forest", "epa")
+gbm_clf = load_model("gbm", "epa")
+
+tree_results_mse = {}
+tree_results_acc = {}
+tree_results_mse['epa_dt'] = (round(mean_squared_error(y_train, dt_clf.predict(x_train), squared=False), 3), round(mean_squared_error(y_test, dt_clf.predict(x_test), squared=False), 3))
+tree_results_mse['epa_rf'] = (round(mean_squared_error(y_train, rf_clf.predict(x_train), squared=False), 3), round(mean_squared_error(y_test, rf_clf.predict(x_test), squared=False), 3))
+tree_results_mse['epa_gbm'] = (round(mean_squared_error(y_train, gbm_clf.predict(x_train), squared=False), 3), round(mean_squared_error(y_test, gbm_clf.predict(x_test), squared=False), 3))
+
+tree_results_acc['epa_dt'] = dt_clf.score(x_test, y_test)
+tree_results_acc['epa_rf'] = rf_clf.score(x_test, y_test)
+tree_results_acc['epa_gbm'] = gbm_clf.score(x_test, y_test)
+print(tree_results_mse)
+print(tree_results_acc)
 
 ################
 # Neural Network 
 ################
+'''
 hidden_layer = (2,2,2)
 activation = 'tanh'
 MLP = MLPRegressor(hidden_layer_sizes=hidden_layer
@@ -111,5 +135,5 @@ MLP = MLPRegressor(hidden_layer_sizes=hidden_layer
                     , activation=activation
                     , max_iter=200).fit(x_train, y_train)
 print(round(mean_squared_error(y_train, MLP.predict(x_train), squared=False),3), round(mean_squared_error(y_test, MLP.predict(x_test), squared=False),3))
-
+'''
 
