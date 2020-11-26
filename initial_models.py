@@ -1,6 +1,7 @@
 import pickle
 import pandas as pd
 import numpy as np
+from matplotlib import pyplot as plt
 from sklearn import tree
 from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
 from sklearn.model_selection import train_test_split
@@ -84,6 +85,9 @@ y_train, y_test = epa_target[train_indices], epa_target[~train_indices]
 ###################
 # Linear Model work
 ###################
+lin_reg_importance = []
+lasso_importance = []
+
 linear_results = {}
 for target in ['playResult', 'EPA']:
     if target == 'playResult':
@@ -99,6 +103,26 @@ for target in ['playResult', 'EPA']:
     linear_results[target + '_lasso_train'] = [round(mean_squared_error(y_train, lasso.predict(x_train), squared=False),3), pd.DataFrame(lasso.coef_, dummied_df.columns)]
     linear_results[target + '_lasso_test'] = [round(mean_squared_error(y_test, lasso.predict(x_test), squared=False),3), pd.DataFrame(lasso.coef_, dummied_df.columns)]
 
+    if target == 'EPA':
+        lin_reg_importance = reg.coef_
+        lasso_importance = lasso.coef_
+
+'''
+plt.figure(3)
+plt.bar([x for x in range(len(lin_reg_importance))], lin_reg_importance)
+plt.xlabel('Feauture Number')
+plt.ylabel('Importance')
+plt.title('Feature Number v. Linear Regression Coefficients')
+plt.savefig("graphs/lin_reg_importance")
+
+plt.figure(4)
+plt.bar([x for x in range(len(lasso_importance))], lasso_importance)
+plt.xlabel('Feauture Number')
+plt.ylabel('Importance')
+plt.title('Feature Number v. Lasso Coefficients')
+plt.savefig("graphs/lasso_importance")
+'''
+
 ###################
 # Tree Model work & GBM
 ###################
@@ -112,6 +136,10 @@ dt_clf = load_model("decision_tree", "epa")
 rf_clf = load_model("random_forest", "epa")
 gbm_clf = load_model("gbm", "epa")
 
+dt_pred = dt_clf.predict(x_test)
+rf_pred = rf_clf.predict(x_test)
+gbm_pred = gbm_clf.predict(x_test)
+
 tree_results_mse = {}
 tree_results_acc = {}
 tree_results_mse['epa_dt'] = (round(mean_squared_error(y_train, dt_clf.predict(x_train), squared=False), 3), round(mean_squared_error(y_test, dt_clf.predict(x_test), squared=False), 3))
@@ -121,8 +149,41 @@ tree_results_mse['epa_gbm'] = (round(mean_squared_error(y_train, gbm_clf.predict
 tree_results_acc['epa_dt'] = dt_clf.score(x_test, y_test)
 tree_results_acc['epa_rf'] = rf_clf.score(x_test, y_test)
 tree_results_acc['epa_gbm'] = gbm_clf.score(x_test, y_test)
-print(tree_results_mse)
-print(tree_results_acc)
+
+dt_importance = dt_clf.feature_importances_
+'''
+plt.figure(1)
+plt.bar([x for x in range(len(dt_importance))], dt_importance)
+plt.xlabel('Feauture Number')
+plt.ylabel('Importance')
+plt.title('Feature Number v. Decision Tree Importance')
+plt.savefig("graphs/dt_importance")
+'''
+
+rf_importance = rf_clf.feature_importances_
+'''
+plt.figure(2)
+plt.bar([x for x in range(len(rf_importance))], rf_importance)
+plt.xlabel('Feauture Number')
+plt.ylabel('Importance')
+plt.title('Feature Number v. Random Forest Importance')
+plt.savefig("graphs/rf_importance")
+'''
+
+gbm_importance = gbm_clf.feature_importances_
+'''
+plt.figure(5)
+plt.bar([x for x in range(len(gbm_importance))], gbm_importance)
+plt.xlabel('Feauture Number')
+plt.ylabel('Importance')
+plt.title('Feature Number v. GBM Importance')
+plt.savefig("graphs/gbm_importance")
+'''
+
+'''
+for i, col in enumerate(feature_matrix.columns):
+    print(i, col)
+'''
 
 ################
 # Neural Network 
