@@ -131,33 +131,34 @@ plays.to_csv('updated_plays.csv')
 # Analysis
 ##########
 combos = ['offenseFormation'
-          ,'personnelO'
-          ,'personnelD'
+          ,['numRBoffense', 'numTEoffense', 'numWRoffense']
+          ,'numDBdefense'
           ,'defendersInTheBox'
           , ['offenseFormation'
-             , 'personnelD'
+             , 'numDBdefense'
              ]
           , ['offenseFormation'
              , 'defendersInTheBox'
              ]
           , ['offenseFormation'
-             ,'personnelD'
+             ,'numDBdefense'
              , 'defendersInTheBox'
              ]
           , ['offenseFormation'
              ,'personnelO'
-             ,'personnelD'
+             ,'numDBdefense'
              ,'defendersInTheBox'
              ]
           ]
 resultVars = ['playResult'
-              ,'firstDown']
+              ,'firstDown'
+              ,'epa']
 analysis = {}
 minCount = 10
 for combo in combos:
     for resultVar in resultVars:
         agg = plays.groupby(combo)[resultVar].agg(['mean', 'count'])
-        analysis[resultVar + "".join(combo)] = agg[agg['count'] >= minCount]
+        analysis[resultVar + "".join(combo)] = agg[agg['count'] >= minCount].reset_index()
 
 ##########
 # Graphing

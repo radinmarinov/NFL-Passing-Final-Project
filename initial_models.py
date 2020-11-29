@@ -126,11 +126,11 @@ plt.savefig("graphs/lasso_importance")
 ###################
 # Tree Model work & GBM
 ###################
-'''
+
 tree_model(x_train, y_train, 'epa')
 random_forest_model(x_train, y_train, 'epa')
 gbm_model(x_train, y_train, 'epa')
-'''
+
 
 dt_clf = load_model("decision_tree", "epa")
 rf_clf = load_model("random_forest", "epa")
