@@ -7,9 +7,11 @@ Created on Thu Nov 12 14:22:44 2020
 
 import pandas as pd
 import matplotlib.pyplot as plt
+import numpy as np
 
 # Import data
 plays = pd.read_csv("plays.csv")
+games = pd.read_csv("games.csv")
 
 ###############
 # Data cleaning
@@ -22,7 +24,7 @@ plays = plays[(pd.isna(plays.penaltyCodes)) & \
 #check_nulls = [{col, sum(pd.isna(plays[col]))} for col in plays.columns]
 
 # 5 entries missing partial data (typeDropback, scores, game clock, abs yardline)
-#plays[pd.isna(plays.typeDropback)]
+plays = plays[~pd.isna(plays.typeDropback)]
 
 #####################
 # Feature Engineering
@@ -40,10 +42,10 @@ plays['incompletePass'] = (plays.playDescription.str.contains("incomplete")) & (
 # First down
 plays['firstDown'] = plays.playResult >= plays.yardsToGo
 
-# Touchdown?
+# Touchdown
 plays['touchDown'] = (plays.playResult >= plays.absoluteYardlineNumber)
 
-# Add new column for number of players per each position for offense, defense?
+# Add new column for number of players per each position for offense, defense
 # Offense
 accum = []
 
@@ -55,9 +57,9 @@ for row in plays['personnelO']:
         elLst = el.split(' ')
 
         if len(elLst) == 2:
-            vals["num" + elLst[1]] = int(elLst[0])
+            vals["num" + elLst[1] + "offense"] = int(elLst[0])
         else:
-            vals["num" + elLst[2]] = int(elLst[1])
+            vals["num" + elLst[2] + "offense"] = int(elLst[1])
 
     accum.append(vals)
 
@@ -76,15 +78,51 @@ for row in plays['personnelD']:
         elLst = el.split(' ')
 
         if len(elLst) == 2:
-            vals["num" + elLst[1]] = int(elLst[0])
+            vals["num" + elLst[1] + "defense"] = int(elLst[0])
         else:
-            vals["num" + elLst[2]] = int(elLst[1])
+            vals["num" + elLst[2] + "defense"] = int(elLst[1])
 
     accum2.append(vals)
 
 tempDF2 = pd.DataFrame(accum2)
 tempDF2 = tempDF2.fillna(0).astype(int)
 plays = pd.concat([plays.reset_index(drop=True), tempDF2.reset_index(drop=True)], axis=1)
+
+# cleaning clock data
+time_accum_quarter = []
+time_accum_overall = []
+
+temp = plays['gameClock'].replace(np.nan, "00:00:00", regex=True)
+
+for idx, t in enumerate(temp):
+    m, s, ms = str(t).split(":")
+    secs = int(m) * 60 + int(s)
+    time_accum_quarter.append(secs)
+    time_accum_overall.append(secs + (15*60* max(4-plays['quarter'].iloc[idx], 0)))
+
+plays['gameClockSecsQuarter'] = time_accum_quarter
+plays['gameClockSecsOverall'] = time_accum_overall
+
+# Last two minutes of either half
+plays['lastTwoMinutes'] = (plays['gameClockSecsQuarter'] <= 120) & (plays['quarter'] % 2 == 0)
+
+# Offense score and defense score
+gameId_lst = plays['gameId'].tolist()
+offenseScore = []
+defenseScore = []
+
+for i, g in enumerate(gameId_lst):
+    homeTeam = games.loc[games['gameId'] == g, 'homeTeamAbbr'].iloc[0]
+
+    if plays['possessionTeam'].iloc[i] == homeTeam:
+        offenseScore.append(plays['preSnapHomeScore'].iloc[i])
+        defenseScore.append(plays['preSnapVisitorScore'].iloc[i])
+    else:
+        offenseScore.append(plays['preSnapVisitorScore'].iloc[i])
+        defenseScore.append(plays['preSnapHomeScore'].iloc[i])
+
+plays['offenseScore'] = offenseScore
+plays['defenseScore'] = defenseScore
 
 # Exporting updated df
 plays.to_csv('updated_plays.csv')
@@ -93,33 +131,34 @@ plays.to_csv('updated_plays.csv')
 # Analysis
 ##########
 combos = ['offenseFormation'
-          ,'personnelO'
-          ,'personnelD'
+          ,['numRBoffense', 'numTEoffense', 'numWRoffense']
+          ,'numDBdefense'
           ,'defendersInTheBox'
           , ['offenseFormation'
-             , 'personnelD'
+             , 'numDBdefense'
              ]
           , ['offenseFormation'
              , 'defendersInTheBox'
              ]
           , ['offenseFormation'
-             ,'personnelD'
+             ,'numDBdefense'
              , 'defendersInTheBox'
              ]
           , ['offenseFormation'
              ,'personnelO'
-             ,'personnelD'
+             ,'numDBdefense'
              ,'defendersInTheBox'
              ]
           ]
 resultVars = ['playResult'
-              ,'firstDown']
+              ,'firstDown'
+              ,'epa']
 analysis = {}
 minCount = 10
 for combo in combos:
     for resultVar in resultVars:
         agg = plays.groupby(combo)[resultVar].agg(['mean', 'count'])
-        analysis[resultVar + "".join(combo)] = agg[agg['count'] >= minCount]
+        analysis[resultVar + "".join(combo)] = agg[agg['count'] >= minCount].reset_index()
 
 ##########
 # Graphing
